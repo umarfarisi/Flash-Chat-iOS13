@@ -12,6 +12,7 @@ import Firebase
 class ChatViewController: UIViewController {
     
     private static let cellIdentifier = "ReuseableCell"
+    private static let otherMessageIdentifier = "OtherMessageCell"
     private static let collection = "message"
     private static let name = "name"
     private static let body = "body"
@@ -31,6 +32,7 @@ class ChatViewController: UIViewController {
         tableView.dataSource = self
         
         tableView.register(UINib(nibName: "MessageCell", bundle: nil), forCellReuseIdentifier: ChatViewController.cellIdentifier)
+        tableView.register(UINib(nibName: "OtherMessageCell", bundle: nil), forCellReuseIdentifier: ChatViewController.otherMessageIdentifier)
         
         
         db.collection(ChatViewController.collection)
@@ -44,8 +46,8 @@ class ChatViewController: UIViewController {
                 let docs = querySnapshot?.documents ?? []
                 for document in docs {
                     let data = document.data()
-                    if let s = data[ChatViewController.name] as? String, let b = data[ChatViewController.body] as? String {
-                        self.messages.append(Message(sender: s, body: b))
+                    if let senderMessage = data[ChatViewController.name] as? String, let bodyMessage = data[ChatViewController.body] as? String {
+                        self.messages.append(Message(sender: senderMessage, body: bodyMessage))
                     }
                 }
                 self.tableView.reloadData()
@@ -94,12 +96,24 @@ extension ChatViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cellItem = tableView.dequeueReusableCell(withIdentifier: ChatViewController.cellIdentifier, for: indexPath) as! MessageCell
-
-        let message = messages[indexPath.row]
-        cellItem.labelV.text = message.body
         
-        return cellItem
+        let message = messages[indexPath.row]
+        let currentUserMail = Auth.auth().currentUser?.email
+        
+        if message.sender == currentUserMail {
+            let cellItem = tableView.dequeueReusableCell(withIdentifier: ChatViewController.cellIdentifier, for: indexPath) as! MessageCell
+
+            cellItem.labelV.text = message.body
+            
+            return cellItem
+        } else {
+            let otherCellItem = tableView.dequeueReusableCell(withIdentifier: ChatViewController.otherMessageIdentifier, for: indexPath) as! OtherMessageCell
+
+            otherCellItem.bindData(message.body)
+            
+            return otherCellItem
+        }
+        
     }
     
 }
