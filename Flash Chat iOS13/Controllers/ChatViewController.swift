@@ -50,9 +50,14 @@ class ChatViewController: UIViewController {
                         self.messages.append(Message(sender: senderMessage, body: bodyMessage))
                     }
                 }
-                self.tableView.reloadData()
+                self.reloadAndGoToDown()
             }
         }
+    }
+    
+    func reloadAndGoToDown() {
+        tableView.reloadData()
+        tableView.scrollToRow(at: IndexPath(row: messages.count - 1, section: 0), at: UITableView.ScrollPosition.top, animated: false)
     }
     
     @IBAction func onLogOutClick(_ sender: UIBarButtonItem) {
